@@ -3,12 +3,12 @@
 import Image from "next/image"
 import Link from "next/link"
 import { useCart } from "@/contexts/cart-context"
-import { Trash2, Plus, Minus } from "lucide-react"
+import { Trash2, Plus, Minus, Loader2 } from "lucide-react"
 import { useState } from "react"
 import { QRModal } from "@/components/qr-modal"
 
 export default function CartPage() {
-  const { state, removeItem, updateQuantity } = useCart()
+  const { state, removeItem, updateQuantity, isLoading, error } = useCart()
   const [isQRModalOpen, setIsQRModalOpen] = useState(false)
 
   const handleCheckout = () => {
@@ -17,6 +17,35 @@ export default function CartPage() {
     const amount = (state.total + 50).toFixed(2)
     const paymentUrl = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(merchantName)}&am=${amount}`
     setIsQRModalOpen(true)
+  }
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-green-600" />
+          <h1 className="text-2xl font-bold mb-4">Loading your cart...</h1>
+          <p className="text-gray-600">Please wait while we fetch your cart items.</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4 text-red-600">Error loading cart</h1>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    )
   }
 
   if (state.items.length === 0) {

@@ -130,7 +130,7 @@ const products = [
     price: 49,
     unit: "Litre",
     farmer: "Dairy Delights",
-    image: "https://files.oaiusercontent.com/file-DaYorJAj3jCmfFE26WN2ar?se=2025-03-27T10%3A06%3A10Z&sp=r&sv=2024-08-04&sr=b&rscc=max-age%3D604800%2C%20immutable%2C%20private&rscd=attachment%3B%20filename%3D89db60ac-b405-4f0b-b22e-15ae4f3ac028.webp&sig=kQ9J7Tut2HI2LIQT5O2tqHO%2BhR1PABVRbgvdf3%2BKUUA%3D",
+    image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRdnleZUiEMX_PhSih5Oyn_iEJPxhF8TB4l8A&s",
     category: "Dairy and Eggs",
   },
   {
@@ -139,7 +139,7 @@ const products = [
     price: 79,
     unit: "Litre",
     farmer: "Dairy Delights",
-    image: "https://files.oaiusercontent.com/file-5K6QE9r1tPyeUXpMqcUhDW?se=2025-03-27T10%3A09%3A49Z&sp=r&sv=2024-08-04&sr=b&rscc=max-age%3D604800%2C%20immutable%2C%20private&rscd=attachment%3B%20filename%3Dbeccd615-2526-4577-b14b-4c8a711e325e.webp&sig=xlWUTcgjDLUCZZF562nT6GnXz%2BM34RrIxqITJdV1WZk%3D",
+    image: "https://farmer-bazaar-static.s3.amazonaws.com/media/product_picture/2022/12/13/IMG_1000023163_487630.jpg",
     category: "Dairy and Eggs",
   },
   {

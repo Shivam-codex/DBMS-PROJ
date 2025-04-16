@@ -103,7 +103,7 @@ export default function AboutPage() {
         </p>
         <div className="flex justify-center gap-4">
           <a
-            href="/farmers/join"
+            href="/join-farmer"
             className="bg-green-600 text-white px-6 py-3 rounded-md hover:bg-green-700 transition-colors"
           >
             Join as a Farmer

@@ -37,11 +37,7 @@ export function LayoutContent({ children }: { children: React.ReactNode }) {
                     About Us
                   </Link>
                 </li>
-                <li>
-                  <Link href="/contact" className="text-gray-600 hover:text-green-600">
-                    Contact
-                  </Link>
-                </li>
+                 
               </ul>
             </div>
 
@@ -49,17 +45,17 @@ export function LayoutContent({ children }: { children: React.ReactNode }) {
               <h3 className="font-bold text-lg mb-4">For Farmers</h3>
               <ul className="space-y-2">
                 <li>
-                  <Link href="/farmers/join" className="text-gray-600 hover:text-green-600">
+                  <Link href="/join-farmer" className="text-gray-600 hover:text-green-600">
                     Join as a Farmer
                   </Link>
                 </li>
                 <li>
-                  <Link href="/farmers/resources" className="text-gray-600 hover:text-green-600">
+                  <Link href="/resources" className="text-gray-600 hover:text-green-600">
                     Resources
                   </Link>
                 </li>
                 <li>
-                  <Link href="/farmers/faq" className="text-gray-600 hover:text-green-600">
+                  <Link href="/faq" className="text-gray-600 hover:text-green-600">
                     FAQ
                   </Link>
                 </li>

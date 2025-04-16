@@ -34,11 +34,11 @@ const farmers = [
   },
   {
     id: 3,
-    farmer: "Omkar Panmand",
+    farmer: "Sarthak Lekurwale",
     name: "Bee Happy Apiaries",
     description: "Sustainable honey production with a focus on bee conservation.",
     location: "Pune, Maharashtra",
-    image: "https://media.istockphoto.com/id/1169190840/photo/beekeeper-holding-beehive-while-standing-outdoors.jpg?b=1&s=612x612&w=0&k=20&c=b58-9bVkd1azyJAaizdohsvtoomp-vuY6FDxiD2Jhu4=",
+    image: "https://media.istockphoto.com/id/471457418/photo/indian-senior-man.jpg?s=612x612&w=0&k=20&c=C4GwUXRuigge-wUxBLm1rqT0ldrCUW9Mpb-VtOEhxjM=",
     fullDescription: "Bee Happy Apiaries practices sustainable beekeeping methods that prioritize bee health and biodiversity. We harvest honey in small batches to ensure quality while maintaining healthy bee colonies.",
     contact: "omkar@beehappy.com | +91 76543 21098",
     products: ["Raw honey", "Bee pollen", "Propolis", "Beeswax products"],
