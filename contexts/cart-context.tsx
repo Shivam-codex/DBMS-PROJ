@@ -1,202 +1,131 @@
 "use client"
 
-import { createContext, useContext, useReducer, ReactNode, useEffect, useState } from "react"
+import { createContext, useContext, useEffect, useState } from "react"
 
 interface CartItem {
-  id: string
+  id: number
   name: string
   price: number
-  unit: string
-  farmer: string
+  quantity: number
   image: string
-  quantity?: number
+  unit: string
+  farm: string
 }
 
-interface CartState {
+interface CartContextType {
   items: CartItem[]
-  total: number
-}
-
-type CartAction =
-  | { type: "ADD_ITEM"; payload: CartItem }
-  | { type: "REMOVE_ITEM"; payload: string }
-  | { type: "UPDATE_QUANTITY"; payload: { id: string; quantity: number } }
-  | { type: "CLEAR_CART" }
-  | { type: "SET_CART"; payload: CartState }
-
-const CartContext = createContext<{
-  state: CartState
   addItem: (item: CartItem) => void
-  removeItem: (id: string) => void
-  updateQuantity: (id: string, quantity: number) => void
+  removeItem: (id: number) => void
+  updateQuantity: (id: number, quantity: number) => void
   clearCart: () => void
   isLoading: boolean
   error: string | null
-} | null>(null)
-
-function cartReducer(state: CartState, action: CartAction): CartState {
-  switch (action.type) {
-    case "ADD_ITEM": {
-      const existingItem = state.items.find((item) => item.id === action.payload.id)
-      if (existingItem) {
-        return {
-          ...state,
-          items: state.items.map((item) =>
-            item.id === action.payload.id
-              ? { ...item, quantity: (item.quantity || 0) + 1 }
-              : item
-          ),
-          total: state.total + action.payload.price,
-        }
-      }
-      return {
-        ...state,
-        items: [...state.items, { ...action.payload, quantity: 1 }],
-        total: state.total + action.payload.price,
-      }
-    }
-
-    case "REMOVE_ITEM": {
-      const item = state.items.find((item) => item.id === action.payload)
-      if (!item) return state
-      return {
-        ...state,
-        items: state.items.filter((item) => item.id !== action.payload),
-        total: state.total - item.price * (item.quantity || 0),
-      }
-    }
-
-    case "UPDATE_QUANTITY": {
-      const item = state.items.find((item) => item.id === action.payload.id)
-      if (!item) return state
-
-      const quantityDiff = action.payload.quantity - (item.quantity || 0)
-      return {
-        ...state,
-        items: state.items.map((item) =>
-          item.id === action.payload.id
-            ? { ...item, quantity: action.payload.quantity }
-            : item
-        ),
-        total: state.total + item.price * quantityDiff,
-      }
-    }
-
-    case "CLEAR_CART":
-      return {
-        items: [],
-        total: 0,
-      }
-
-    case "SET_CART":
-      return action.payload
-
-    default:
-      return state
-  }
+  subtotal: number
+  deliveryFee: number
+  total: number
 }
 
-export function CartProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(cartReducer, {
-    items: [],
-    total: 0,
-  })
+const CartContext = createContext<CartContextType | undefined>(undefined)
+
+const DELIVERY_FEE = 50 // ₹50 delivery fee
+
+export function CartProvider({ children }: { children: React.ReactNode }) {
+  const [items, setItems] = useState<CartItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [subtotal, setSubtotal] = useState(0)
+  const [total, setTotal] = useState(0)
 
-  // Load cart from MongoDB on mount
+  // Load cart from local storage on mount
   useEffect(() => {
-    const loadCart = async () => {
+    const loadCart = () => {
       try {
-        setIsLoading(true)
-        setError(null)
-        // For demo purposes, using a fixed userId. In a real app, this would come from authentication
-        const userId = "demo-user"
-        const response = await fetch(`/api/cart?userId=${userId}`)
-        
-        if (!response.ok) {
-          throw new Error(`Failed to load cart: ${response.statusText}`)
+        const savedCart = localStorage.getItem('cart')
+        if (savedCart) {
+          const parsedCart = JSON.parse(savedCart)
+          setItems(parsedCart)
         }
-        
-        const data = await response.json()
-        if (data.items) {
-          dispatch({ type: "SET_CART", payload: { items: data.items, total: data.total } })
-        }
-      } catch (error) {
-        console.error("Failed to load cart:", error)
-        setError(error instanceof Error ? error.message : "Failed to load cart")
+      } catch (err) {
+        console.error('Failed to load cart from localStorage:', err)
+        setError('Failed to load your cart. Please try again.')
       } finally {
         setIsLoading(false)
       }
     }
+
     loadCart()
   }, [])
 
-  // Save cart to MongoDB whenever it changes
+  // Save cart to local storage whenever it changes
   useEffect(() => {
-    const saveCart = async () => {
-      try {
-        setError(null)
-        const userId = "demo-user" // Same as above
-        const response = await fetch("/api/cart", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            userId,
-            items: state.items,
-            total: state.total,
-          }),
-        })
-        
-        if (!response.ok) {
-          throw new Error(`Failed to save cart: ${response.statusText}`)
-        }
-      } catch (error) {
-        console.error("Failed to save cart:", error)
-        setError(error instanceof Error ? error.message : "Failed to save cart")
-      }
+    try {
+      localStorage.setItem('cart', JSON.stringify(items))
+    } catch (err) {
+      console.error('Failed to save cart to localStorage:', err)
     }
-    
-    // Only save if we've already loaded the cart (to avoid unnecessary saves)
-    if (!isLoading) {
-      saveCart()
-    }
-  }, [state, isLoading])
+  }, [items])
+
+  // Calculate totals whenever items change
+  useEffect(() => {
+    const newSubtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+    setSubtotal(newSubtotal)
+    setTotal(newSubtotal + DELIVERY_FEE)
+  }, [items])
 
   const addItem = (item: CartItem) => {
-    dispatch({ type: "ADD_ITEM", payload: item })
+    setItems(currentItems => {
+      const existingItem = currentItems.find(i => i.id === item.id)
+      
+      if (existingItem) {
+        return currentItems.map(i =>
+          i.id === item.id
+            ? { ...i, quantity: i.quantity + 1 }
+            : i
+        )
+      }
+      
+      return [...currentItems, { ...item, quantity: 1 }]
+    })
   }
 
-  const removeItem = (id: string) => {
-    dispatch({ type: "REMOVE_ITEM", payload: id })
+  const removeItem = (id: number) => {
+    setItems(currentItems => currentItems.filter(item => item.id !== id))
   }
 
-  const updateQuantity = (id: string, quantity: number) => {
-    if (quantity < 1) {
-      removeItem(id)
-    } else {
-      dispatch({ type: "UPDATE_QUANTITY", payload: { id, quantity } })
-    }
+  const updateQuantity = (id: number, quantity: number) => {
+    if (quantity < 1) return
+    
+    setItems(currentItems =>
+      currentItems.map(item =>
+        item.id === id ? { ...item, quantity } : item
+      )
+    )
   }
 
   const clearCart = () => {
-    dispatch({ type: "CLEAR_CART" })
+    setItems([])
+    try {
+      localStorage.removeItem('cart')
+    } catch (err) {
+      console.error('Failed to clear cart from localStorage:', err)
+    }
+  }
+
+  const value = {
+    items,
+    addItem,
+    removeItem,
+    updateQuantity,
+    clearCart,
+    isLoading,
+    error,
+    subtotal,
+    deliveryFee: DELIVERY_FEE,
+    total
   }
 
   return (
-    <CartContext.Provider
-      value={{
-        state,
-        addItem,
-        removeItem,
-        updateQuantity,
-        clearCart,
-        isLoading,
-        error
-      }}
-    >
+    <CartContext.Provider value={value}>
       {children}
     </CartContext.Provider>
   )
@@ -204,8 +133,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
 export function useCart() {
   const context = useContext(CartContext)
-  if (!context) {
-    throw new Error("useCart must be used within a CartProvider")
+  if (context === undefined) {
+    throw new Error('useCart must be used within a CartProvider')
   }
   return context
 } 
