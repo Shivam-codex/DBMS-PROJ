@@ -16,9 +16,14 @@ const products = [
     farm: "Sunny Meadow Farm",
     image: "https://images.pexels.com/photos/162712/egg-white-food-protein-162712.jpeg?auto=compress&cs=tinysrgb&w=800",
     category: "dairy"
+
+
+
+    
   },
   {
     id: 2,
+
     name: "Organic Tomatoes",
     price: 60,
     unit: "kg",
@@ -344,7 +349,15 @@ export default function ProductsPage() {
                   <p className="text-sm text-gray-500">per {product.unit}</p>
                 </div>
                 <button
-                  onClick={() => addItem({...product, id: Number(product.id), quantity: 1})}
+                  onClick={() => addItem({
+                    productId: product.id,
+                    name: product.name,
+                    price: product.price,
+                    image: product.image,
+                    unit: product.unit,
+                    farm: product.farm,
+                    quantity: 1
+                  })}
                   className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors"
                 >
                   Add to Cart

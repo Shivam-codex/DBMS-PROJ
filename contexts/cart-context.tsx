@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useState } from "react"
 
 interface CartItem {
-  id: number
+  productId: string | number
   name: string
   price: number
   quantity: number
@@ -36,17 +36,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [subtotal, setSubtotal] = useState(0)
   const [total, setTotal] = useState(0)
 
-  // Load cart from local storage on mount
+  // Load cart from database on mount
   useEffect(() => {
-    const loadCart = () => {
+    const loadCart = async () => {
       try {
-        const savedCart = localStorage.getItem('cart')
-        if (savedCart) {
-          const parsedCart = JSON.parse(savedCart)
-          setItems(parsedCart)
-        }
+        const response = await fetch('/api/cart?userId=1') // Replace with actual user ID
+        if (!response.ok) throw new Error('Failed to load cart')
+        const data = await response.json()
+        setItems(data.items || [])
       } catch (err) {
-        console.error('Failed to load cart from localStorage:', err)
+        console.error('Failed to load cart:', err)
         setError('Failed to load your cart. Please try again.')
       } finally {
         setIsLoading(false)
@@ -56,15 +55,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     loadCart()
   }, [])
 
-  // Save cart to local storage whenever it changes
-  useEffect(() => {
-    try {
-      localStorage.setItem('cart', JSON.stringify(items))
-    } catch (err) {
-      console.error('Failed to save cart to localStorage:', err)
-    }
-  }, [items])
-
   // Calculate totals whenever items change
   useEffect(() => {
     const newSubtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
@@ -72,42 +62,103 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setTotal(newSubtotal + DELIVERY_FEE)
   }, [items])
 
-  const addItem = (item: CartItem) => {
-    setItems(currentItems => {
-      const existingItem = currentItems.find(i => i.id === item.id)
-      
-      if (existingItem) {
-        return currentItems.map(i =>
-          i.id === item.id
-            ? { ...i, quantity: i.quantity + 1 }
-            : i
-        )
+  const addItem = async (item: CartItem) => {
+    try {
+      // Convert productId to number if it's a string
+      const productId = typeof item.productId === 'string' ? parseInt(item.productId, 10) : item.productId
+
+      if (isNaN(productId) || productId <= 0) {
+        console.error('Invalid product ID:', item.productId)
+        throw new Error('Invalid product ID')
       }
-      
-      return [...currentItems, { ...item, quantity: 1 }]
-    })
+
+      const cartItem = {
+        productId,
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity || 1,
+        image: item.image,
+        unit: item.unit,
+        farm: item.farm
+      }
+
+      console.log('Adding to cart:', cartItem) // Debug log
+
+      const response = await fetch('/api/cart', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: '1', // Replace with actual user ID
+          item: cartItem
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to add item to cart')
+      }
+
+      const data = await response.json()
+      setItems(data.items)
+    } catch (err) {
+      console.error('Failed to add item to cart:', err)
+      setError(err instanceof Error ? err.message : 'Failed to add item to cart. Please try again.')
+    }
   }
 
-  const removeItem = (id: number) => {
-    setItems(currentItems => currentItems.filter(item => item.id !== id))
+  const removeItem = async (id: number) => {
+    try {
+      const response = await fetch(`/api/cart?userId=1&productId=${id}`, {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) throw new Error('Failed to remove item from cart')
+      const data = await response.json()
+      setItems(data.items)
+    } catch (err) {
+      console.error('Failed to remove item from cart:', err)
+      setError('Failed to remove item from cart. Please try again.')
+    }
   }
 
-  const updateQuantity = (id: number, quantity: number) => {
+  const updateQuantity = async (id: number, quantity: number) => {
     if (quantity < 1) return
     
-    setItems(currentItems =>
-      currentItems.map(item =>
-        item.id === id ? { ...item, quantity } : item
-      )
-    )
+    try {
+      const response = await fetch('/api/cart', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: '1', // Replace with actual user ID
+          productId: id,
+          quantity
+        }),
+      })
+
+      if (!response.ok) throw new Error('Failed to update cart')
+      const data = await response.json()
+      setItems(data.items)
+    } catch (err) {
+      console.error('Failed to update cart:', err)
+      setError('Failed to update cart. Please try again.')
+    }
   }
 
-  const clearCart = () => {
-    setItems([])
+  const clearCart = async () => {
     try {
-      localStorage.removeItem('cart')
+      const response = await fetch('/api/cart?userId=1', {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) throw new Error('Failed to clear cart')
+      setItems([])
     } catch (err) {
-      console.error('Failed to clear cart from localStorage:', err)
+      console.error('Failed to clear cart:', err)
+      setError('Failed to clear cart. Please try again.')
     }
   }
 
